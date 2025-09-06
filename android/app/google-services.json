@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "623436023655",
+    "project_id": "cash-cache-b701d",
+    "storage_bucket": "cash-cache-b701d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623436023655:android:6ab7c4722cf44f18aa91c2",
+        "android_client_info": {
+          "package_name": "com.example.cash_cache"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "623436023655-km5eop2eahmdkmu7crbvgq7hsvn4pfn2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_lZkxLlvY2Jb2nq1DdFhzadffu0mnK64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "623436023655-km5eop2eahmdkmu7crbvgq7hsvn4pfn2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "623436023655-b7l3ludbafjqia04kj94hdcmoie2dfrf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.frugalstone.cashcache"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:623436023655:android:1a92c84a762d6a19aa91c2",
+        "android_client_info": {
+          "package_name": "com.frugalstone.cashcache"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "623436023655-t8t6b07ho9n29k0japo3dglv7j2o8e8b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.frugalstone.cashcache",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "623436023655-km5eop2eahmdkmu7crbvgq7hsvn4pfn2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_lZkxLlvY2Jb2nq1DdFhzadffu0mnK64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "623436023655-km5eop2eahmdkmu7crbvgq7hsvn4pfn2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "623436023655-b7l3ludbafjqia04kj94hdcmoie2dfrf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.frugalstone.cashcache"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
