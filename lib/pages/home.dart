@@ -18,7 +18,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    final messages = Provider.of<Data>(context).messages;
+    final pendingSpends = Provider.of<Data>(context).pendingSpends;
 
     return Scaffold(
       appBar: AppBar(
@@ -48,12 +48,51 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? const CircularProgressIndicator()
                 : Expanded(
                     child: ListView.builder(
-                      itemCount: messages.length,
+                      itemCount: pendingSpends.length,
                       itemBuilder: (context, index) {
-                        final message = messages[index];
+                        final spend = pendingSpends[index];
                         return ListTile(
-                          title: Text(message.body ?? 'No content'),
-                          subtitle: Text(message.address ?? 'No address'),
+                          title: Text(spend.amount.toString()),
+                          subtitle: Text(spend.dateTime.toString()),
+                          trailing: IconButton(
+                              onPressed: () => {
+                                    // diplay modal sheet
+                                    showModalBottomSheet(
+                                      context: context,
+                                      builder: (context) {
+                                        return Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Spend Details',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineSmall,
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Text(
+                                                  'Amount: ₹${spend.amount.toString()}'),
+                                              Text(
+                                                  'Date: ${spend.dateTime.toString()}'),
+                                              Text('Info: ${spend.info}'),
+                                              const SizedBox(height: 16),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text('Close'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  },
+                              icon: const Icon(Icons.info)),
                         );
                       },
                     ),
