@@ -17,6 +17,40 @@ class Data extends ChangeNotifier {
   List<Spend> pendingSpends = [];
   List<Cycle> cycles = [];
 
+  Cycle get currentCycle {
+    if (cycles.isNotEmpty) {
+      return cycles.last;
+    } else {
+      // return a default cycle
+      return Cycle(
+        name: "No Cycle",
+        startDate: DateTime.now(),
+        endDate: DateTime.now().add(const Duration(days: 30)),
+        budget: 0,
+      );
+    }
+  }
+
+  void addSpendtoCategory(String category, Spend spend) {
+    if (!currentCycle.categories.contains(category)) {
+      currentCycle.categories.add(category);
+    }
+    if (currentCycle.spends.containsKey(category)) {
+      currentCycle.spends[category]!.add(spend);
+    } else {
+      currentCycle.spends[category] = [spend];
+    }
+    pendingSpends.remove(spend);
+    notifyListeners();
+  }
+
+  void deleteSpend(Spend spend) {
+    for (var category in currentCycle.spends.keys) {
+      currentCycle.spends[category]!.remove(spend);
+    }
+    notifyListeners();
+  }
+
   Data() {
     init();
   }
@@ -26,6 +60,8 @@ class Data extends ChangeNotifier {
     notifyListeners();
 
     // loading saved data
+    // loadData();
+    loadSampleData();
 
     lastUpdated = await getLastUpdated();
     await initMessages();
@@ -33,6 +69,49 @@ class Data extends ChangeNotifier {
     pendingSpends = extractSpendsFromMessages(messages);
 
     loadingSate = false;
+    notifyListeners();
+  }
+
+  void loadSampleData() {
+    Cycle cycle = Cycle(
+      name: "Sample Cycle",
+      startDate: DateTime.now().subtract(const Duration(days: 30)),
+      endDate: DateTime.now(),
+      budget: 1000,
+    );
+
+    cycle.categories = ["Food", "Transport", "Shopping"];
+    cycle.spends = {
+      "Food": [
+        Spend(
+          dateTime: DateTime.now().subtract(const Duration(days: 5)),
+          amount: 50,
+          info: "Grocery shopping",
+        ),
+        Spend(
+          dateTime: DateTime.now().subtract(const Duration(days: 3)),
+          amount: 30,
+          info: "Dinner out",
+        ),
+      ],
+      "Transport": [
+        Spend(
+          dateTime: DateTime.now().subtract(const Duration(days: 10)),
+          amount: 20,
+          info: "Gas refill",
+        ),
+      ],
+      "Shopping": [
+        Spend(
+          dateTime: DateTime.now().subtract(const Duration(days: 15)),
+          amount: 100,
+          info: "New shoes",
+        ),
+      ],
+    };
+
+    cycles = [cycle];
+
     notifyListeners();
   }
 
