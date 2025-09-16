@@ -40,14 +40,12 @@ class Data extends ChangeNotifier {
     } else {
       currentCycle.spends[category] = [spend];
     }
-    pendingSpends.remove(spend);
+    pendingSpends.removeWhere((e) => e.id == spend.id);
     notifyListeners();
   }
 
-  void deleteSpend(Spend spend) {
-    for (var category in currentCycle.spends.keys) {
-      currentCycle.spends[category]!.remove(spend);
-    }
+  void deletePendingSpend(Spend spend) {
+    pendingSpends.removeWhere((e) => e.id == spend.id);
     notifyListeners();
   }
 
