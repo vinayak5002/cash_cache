@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cash_cache/constants/sharedPrefs.dart';
 import 'package:cash_cache/model/Cycle.dart';
 import 'package:cash_cache/model/Spend.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +32,10 @@ class Data extends ChangeNotifier {
     }
   }
 
+  Data() {
+    init();
+  }
+
   void addSpendtoCategory(String category, Spend spend) {
     if (!currentCycle.categories.contains(category)) {
       currentCycle.categories.add(category);
@@ -41,30 +46,32 @@ class Data extends ChangeNotifier {
       currentCycle.spends[category] = [spend];
     }
     pendingSpends.removeWhere((e) => e.id == spend.id);
+    saveAllData();
     notifyListeners();
   }
 
   void deletePendingSpend(Spend spend) {
     pendingSpends.removeWhere((e) => e.id == spend.id);
+    savePendingSpendsData();
     notifyListeners();
-  }
-
-  Data() {
-    init();
   }
 
   Future<void> init() async {
     loadingSate = true;
     notifyListeners();
 
-    // loading saved data
-    // loadData();
-    loadSampleData();
+    // clear old spends before loading
+    pendingSpends = [];
+
+    loadData();
 
     lastUpdated = await getLastUpdated();
     await initMessages();
 
-    pendingSpends = extractSpendsFromMessages(messages);
+    pendingSpends.addAll(extractSpendsFromMessages(messages));
+    savePendingSpendsData();
+
+    // clear all spends from shared preferences
 
     loadingSate = false;
     notifyListeners();
@@ -75,38 +82,38 @@ class Data extends ChangeNotifier {
       name: "Sample Cycle",
       startDate: DateTime.now().subtract(const Duration(days: 30)),
       endDate: DateTime.now(),
-      budget: 1000,
+      budget: 5000,
     );
 
     cycle.categories = ["Food", "Transport", "Shopping"];
-    cycle.spends = {
-      "Food": [
-        Spend(
-          dateTime: DateTime.now().subtract(const Duration(days: 5)),
-          amount: 50,
-          info: "Grocery shopping",
-        ),
-        Spend(
-          dateTime: DateTime.now().subtract(const Duration(days: 3)),
-          amount: 30,
-          info: "Dinner out",
-        ),
-      ],
-      "Transport": [
-        Spend(
-          dateTime: DateTime.now().subtract(const Duration(days: 10)),
-          amount: 20,
-          info: "Gas refill",
-        ),
-      ],
-      "Shopping": [
-        Spend(
-          dateTime: DateTime.now().subtract(const Duration(days: 15)),
-          amount: 100,
-          info: "New shoes",
-        ),
-      ],
-    };
+    // cycle.spends = {
+    //   "Food": [
+    //     Spend(
+    //       dateTime: DateTime.now().subtract(const Duration(days: 5)),
+    //       amount: 50,
+    //       info: "Grocery shopping",
+    //     ),
+    //     Spend(
+    //       dateTime: DateTime.now().subtract(const Duration(days: 3)),
+    //       amount: 30,
+    //       info: "Dinner out",
+    //     ),
+    //   ],
+    //   "Transport": [
+    //     Spend(
+    //       dateTime: DateTime.now().subtract(const Duration(days: 10)),
+    //       amount: 20,
+    //       info: "Gas refill",
+    //     ),
+    //   ],
+    //   "Shopping": [
+    //     Spend(
+    //       dateTime: DateTime.now().subtract(const Duration(days: 15)),
+    //       amount: 100,
+    //       info: "New shoes",
+    //     ),
+    //   ],
+    // };
 
     cycles = [cycle];
 
@@ -116,28 +123,82 @@ class Data extends ChangeNotifier {
   void loadData() async {
     // load data from shared preferences
 
+    loadCycleData();
+    loadPendingSpends();
+  }
+
+  void loadCycleData() async {
+    // load data from shared preferences
+
     SharedPreferences pref = await SharedPreferences.getInstance();
 
-    final storedData = pref.getStringList('data');
+    final storedCycleData = pref.getStringList(CYCLE_DATA_STORAGE_KEY);
 
-    if (storedData != null) {
-      // parse the stored data and load it into the app
-
-      cycles = storedData
+    if (storedCycleData != null) {
+      cycles = storedCycleData
           .map((cycleString) => Cycle.fromMap(jsonDecode(cycleString)))
           .toList();
 
-      print("Data loaded: $storedData");
+      print("Data loaded: $storedCycleData");
     } else {
-      print("No data found in shared preferences.");
+      print("No Cycle data found in shared preferences.");
     }
+  }
+
+  void loadPendingSpends() async {
+    print("Called loadPendingSpends");
+    SharedPreferences pref = await SharedPreferences.getInstance();
+
+    final storedSpendsData = pref.getStringList(SPENDS_DATA_STORAGE_KEY);
+    if (storedSpendsData != null) {
+      // clear before adding
+      pendingSpends.addAll(storedSpendsData
+          .map((spendString) => Spend.fromMap(jsonDecode(spendString)))
+          .toList());
+
+      print("Pending spends loaded: $storedSpendsData");
+    } else {
+      print("No Pending spends data found in shared preferences.");
+    }
+  }
+
+  void saveAllData() {
+    print("Saving all data...");
+    saveCycleData();
+    savePendingSpendsData();
+  }
+
+  void saveCycleData() async {
+    // save data to shared preferences
+
+    SharedPreferences pref = await SharedPreferences.getInstance();
+
+    final dataToStore =
+        cycles.map((cycle) => jsonEncode(cycle.toMap())).toList();
+
+    await pref.setStringList(CYCLE_DATA_STORAGE_KEY, dataToStore);
+
+    print("Cycle Data saved: $dataToStore");
+  }
+
+  void savePendingSpendsData() async {
+    // save data to shared preferences
+
+    SharedPreferences pref = await SharedPreferences.getInstance();
+
+    final dataToStore =
+        pendingSpends.map((spend) => jsonEncode(spend.toMap())).toList();
+
+    await pref.setStringList(SPENDS_DATA_STORAGE_KEY, dataToStore);
+
+    print("Pending spends Data saved: $dataToStore");
   }
 
   Future<DateTime> getLastUpdated() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
 
-    // final storedString = pref.getString('lastUpdated');
-    final storedString = null;
+    final storedString = pref.getString('lastUpdated');
+    // final storedString = null;
 
     print("Stored string: $storedString");
 
@@ -159,6 +220,7 @@ class Data extends ChangeNotifier {
 
   Future<void> initMessages() async {
     messages = await getMessagesTillLastUpdated();
+    print('Fetched ${messages.length} new messages');
 
     if (messages.isNotEmpty) {
       lastUpdated = messages.first.date!;
@@ -168,50 +230,6 @@ class Data extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Future<List<SmsMessage>> getMessagesTillLastUpdated() async {
-  //   final SmsQuery query = SmsQuery();
-
-  //   var permission = await Permission.sms.status;
-
-  //   while (permission.isDenied) {
-  //     permission = await Permission.sms.request();
-  //   }
-
-  //   List<SmsMessage> allMessages = [];
-  //   bool continueFetching = true;
-
-  //   do {
-  //     print("Messages read till now: ${allMessages.length}");
-  //     final msgs = await query.querySms(
-  //       kinds: [
-  //         SmsQueryKind.inbox,
-  //         SmsQueryKind.sent,
-  //       ],
-  //       count: 3,
-  //       sort: true,
-  //     );
-
-  //     print("Messages fetched: ${msgs.length}");
-
-  //     // Break out of loop if no new messages
-  //     if (msgs.isEmpty) {
-  //       break;
-  //     }
-
-  //     // Filter messages to only include those that are after 'lastUpdated'
-  //     allMessages.addAll(
-  //       msgs.where((m) => m.date!.isAfter(lastUpdated)),
-  //     );
-
-  //     if (allMessages.length >= 100) {
-  //       break;
-  //     }
-  //   } while (allMessages.isNotEmpty &&
-  //       allMessages.last.date!.isAfter(lastUpdated) &&
-  //       continueFetching);
-
-  //   return allMessages;
-  // }
   Future<List<SmsMessage>> getMessagesTillLastUpdated() async {
     final SmsQuery query = SmsQuery();
 

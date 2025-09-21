@@ -15,7 +15,9 @@ class Cyclepage extends StatefulWidget {
 class _CyclepageState extends State<Cyclepage> {
   @override
   Widget build(BuildContext context) {
-    Map<String, double> dataMap = {};
+    Map<String, double> dataMap = {
+      for (var category in widget.cycle.categories) category: 0.0,
+    };
 
     for (var key in widget.cycle.spends.keys) {
       dataMap[key] = widget.cycle.spends[key]!

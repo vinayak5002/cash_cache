@@ -38,7 +38,8 @@ class CycleCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             StepProgressIndicator(
-              totalSteps: currentCycle.budget.toInt(),
+              totalSteps:
+                  (currentCycle.budget > 0 ? currentCycle.budget : 1).toInt(),
               currentStep: currentCycle.totalSpent > currentCycle.budget
                   ? currentCycle.budget.toInt()
                   : currentCycle.totalSpent.toInt(),
