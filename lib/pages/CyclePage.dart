@@ -1,9 +1,11 @@
 import 'package:cash_cache/constants/styling.dart';
+import 'package:cash_cache/data/Data.dart';
 import 'package:cash_cache/helpers/textHelper.dart';
 import 'package:cash_cache/model/Cycle.dart';
 import 'package:flutter/material.dart';
 import 'package:pie_chart/pie_chart.dart' as pc;
 import 'package:fl_chart/fl_chart.dart' as fl;
+import 'package:provider/provider.dart';
 
 class Cyclepage extends StatefulWidget {
   final Cycle cycle;
@@ -105,6 +107,10 @@ class _CyclepageState extends State<Cyclepage> {
           .fold(0.0, (sum, spend) => sum + spend.amount);
     }
 
+    final hasSpends = dataMap.values.any((v) => v > 0);
+    print("Has spends: $hasSpends");
+    print(widget.cycle.spends);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -113,6 +119,22 @@ class _CyclepageState extends State<Cyclepage> {
         ),
         centerTitle: true,
         elevation: 2,
+        actions: [
+          IconButton(
+            icon: Icon(
+              widget.cycle.id ==
+                      Provider.of<Data>(context, listen: false)
+                          .getCurrentCycleId()
+                  ? Icons.check_circle
+                  : Icons.check_circle_outline,
+            ),
+            onPressed: () {
+              Provider.of<Data>(context, listen: false)
+                  .setAsCurrentCycle(widget.cycle.id);
+              setState(() {});
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -120,32 +142,43 @@ class _CyclepageState extends State<Cyclepage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            pc.PieChart(
-              dataMap: dataMap,
-              animationDuration: const Duration(milliseconds: 800),
-              chartLegendSpacing: 32,
-              chartRadius: MediaQuery.of(context).size.width / 2.0,
-              colorList: colorList,
-              initialAngleInDegree: 0,
-              chartType: pc.ChartType.disc,
-              ringStrokeWidth: 32,
-              legendOptions: const pc.LegendOptions(
-                showLegendsInRow: false,
-                legendPosition: pc.LegendPosition.right,
-                showLegends: true,
-                legendShape: BoxShape.circle,
-                legendTextStyle: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              chartValuesOptions: const pc.ChartValuesOptions(
-                showChartValueBackground: true,
-                showChartValues: true,
-                showChartValuesInPercentage: false,
-                showChartValuesOutside: false,
-                decimalPlaces: 1,
-              ),
-            ),
+            hasSpends
+                ? pc.PieChart(
+                    dataMap: dataMap,
+                    animationDuration: const Duration(milliseconds: 800),
+                    chartLegendSpacing: 32,
+                    chartRadius: MediaQuery.of(context).size.width / 2.0,
+                    colorList: colorList,
+                    initialAngleInDegree: 0,
+                    chartType: pc.ChartType.disc,
+                    ringStrokeWidth: 32,
+                    legendOptions: const pc.LegendOptions(
+                      showLegendsInRow: false,
+                      legendPosition: pc.LegendPosition.right,
+                      showLegends: true,
+                      legendShape: BoxShape.circle,
+                      legendTextStyle: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    chartValuesOptions: const pc.ChartValuesOptions(
+                      showChartValueBackground: true,
+                      showChartValues: true,
+                      showChartValuesInPercentage: false,
+                      showChartValuesOutside: false,
+                      decimalPlaces: 1,
+                    ),
+                  )
+                : const Center(
+                    child: Text(
+                      "No spends recorded yet",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
             const SizedBox(height: 16),
             Expanded(
               child: DefaultTabController(

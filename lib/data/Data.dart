@@ -17,19 +17,59 @@ class Data extends ChangeNotifier {
   // Data
   List<Spend> pendingSpends = [];
   List<Cycle> cycles = [];
+  int currentCycleId = -1;
 
   Cycle get currentCycle {
-    if (cycles.isNotEmpty) {
-      return cycles.last;
-    } else {
-      // return a default cycle
-      return Cycle(
-        name: "No Cycle",
-        startDate: DateTime.now(),
-        endDate: DateTime.now().add(const Duration(days: 30)),
-        budget: 0,
-      );
+    Cycle? currentCycleFromList = cycles.firstWhere(
+      (cycle) => cycle.id == currentCycleId,
+      orElse: () {
+        if (cycles.isNotEmpty) {
+          currentCycleId = cycles.last.id;
+          return cycles.last;
+        } else {
+          return Cycle(
+            name: "Create new cycle",
+            startDate: DateTime.now(),
+            endDate: DateTime.now().add(const Duration(days: 30)),
+            budget: 0,
+          );
+        }
+      },
+    );
+
+    print("Current Cycle ID: $currentCycleId");
+
+    return currentCycleFromList;
+  }
+
+  int getCurrentCycleId() {
+    return currentCycleId;
+  }
+
+  void setAsCurrentCycle(int id) {
+    currentCycleId = id;
+    saveCycleData();
+    notifyListeners();
+  }
+
+  void addCycle(Cycle cycle) {
+    cycles.add(cycle);
+    currentCycleId = cycle.id;
+    saveCycleData();
+    notifyListeners();
+  }
+
+  void deleteCycle(Cycle cycle) {
+    cycles.removeWhere((c) => c.id == cycle.id);
+    if (currentCycleId == cycle.id) {
+      if (cycles.isNotEmpty) {
+        currentCycleId = cycles.last.id;
+      } else {
+        currentCycleId = -1;
+      }
     }
+    saveAllData();
+    notifyListeners();
   }
 
   Data() {
@@ -139,6 +179,7 @@ class Data extends ChangeNotifier {
     SharedPreferences pref = await SharedPreferences.getInstance();
 
     final storedCycleData = pref.getStringList(CYCLE_DATA_STORAGE_KEY);
+    final storedCurrentCycleId = pref.getInt(CYCLE_DATA_ID_STORAGE_KEY);
 
     if (storedCycleData != null) {
       cycles = storedCycleData
@@ -148,6 +189,13 @@ class Data extends ChangeNotifier {
       print("Data loaded: $storedCycleData");
     } else {
       print("No Cycle data found in shared preferences.");
+    }
+
+    if (storedCurrentCycleId != null) {
+      currentCycleId = storedCurrentCycleId;
+      print("Current Cycle ID loaded: $currentCycleId");
+    } else {
+      print("No Current Cycle ID found in shared preferences.");
     }
   }
 
@@ -182,7 +230,10 @@ class Data extends ChangeNotifier {
     final dataToStore =
         cycles.map((cycle) => jsonEncode(cycle.toMap())).toList();
 
+    final currentCycleIdToStore = currentCycleId;
+
     await pref.setStringList(CYCLE_DATA_STORAGE_KEY, dataToStore);
+    await pref.setInt(CYCLE_DATA_ID_STORAGE_KEY, currentCycleIdToStore);
 
     print("Cycle Data saved: $dataToStore");
   }

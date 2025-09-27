@@ -1,5 +1,6 @@
 import 'package:cash_cache/data/Data.dart';
 import 'package:cash_cache/helpers/textHelper.dart';
+import 'package:cash_cache/model/Cycle.dart';
 import 'package:cash_cache/pages/CyclePage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -103,7 +104,41 @@ class _CyclesListPageState extends State<CyclesListPage> {
                     ],
                   ),
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                trailing: GestureDetector(
+                  child: const Icon(
+                    Icons.delete,
+                    color: Colors.red,
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text("Delete Cycle"),
+                        content: const Text(
+                            "Are you sure you want to delete this cycle?"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: const Text("Cancel"),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: () {
+                              Provider.of<Data>(context, listen: false)
+                                  .deleteCycle(
+                                      cycle); // 👈 implement this in Data
+                              Navigator.of(ctx).pop();
+                            },
+                            child: const Text("Delete"),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -116,6 +151,128 @@ class _CyclesListPageState extends State<CyclesListPage> {
           },
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showCreateCycleDialog(context);
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showCreateCycleDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    final budgetController = TextEditingController();
+    DateTime? startDate;
+    DateTime? endDate;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Create New Cycle"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration:
+                          const InputDecoration(labelText: "Cycle Name"),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: budgetController,
+                      decoration:
+                          const InputDecoration(labelText: "Budget (Rs.)"),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 10),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(startDate == null
+                          ? "Select Start Date"
+                          : "Start: ${dateToString(startDate!)}"),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            startDate = picked;
+                          });
+                        }
+                      },
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(endDate == null
+                          ? "Select End Date"
+                          : "End: ${dateToString(endDate!)}"),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate:
+                              startDate ?? DateTime.now(), // after start
+                          firstDate: startDate ?? DateTime.now(),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            endDate = picked;
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final name = nameController.text.trim();
+                    final budget =
+                        double.tryParse(budgetController.text) ?? 0.0;
+
+                    if (name.isNotEmpty &&
+                        startDate != null &&
+                        endDate != null) {
+                      final newCycle = Cycle(
+                        name: name,
+                        startDate: startDate!,
+                        endDate: endDate!,
+                        budget: budget,
+                      );
+
+                      Provider.of<Data>(context, listen: false)
+                          .addCycle(newCycle);
+                      Navigator.pop(ctx);
+                    } else {
+                      // optional: show warning if date not selected
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Please select start and end dates")),
+                      );
+                    }
+                  },
+                  child: const Text("Create"),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
