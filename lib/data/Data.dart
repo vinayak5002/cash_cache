@@ -36,6 +36,12 @@ class Data extends ChangeNotifier {
     init();
   }
 
+  void addPendingSpend(Spend spend) {
+    pendingSpends.add(spend);
+    savePendingSpendsData();
+    notifyListeners();
+  }
+
   void addSpendtoCategory(String category, Spend spend) {
     if (!currentCycle.categories.contains(category)) {
       currentCycle.categories.add(category);

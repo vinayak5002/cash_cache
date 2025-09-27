@@ -20,3 +20,11 @@ String timeStampToString(DateTime timestamp) {
 String dateToString(DateTime date) {
   return DateFormat("d MMM yyyy").format(date);
 }
+
+String formatDate(String dateStr) {
+  // Parse the input string into a DateTime object
+  DateTime date = DateTime.parse(dateStr);
+
+  // Format the date as "21 Sep 2025"
+  return DateFormat('dd MMM yyyy').format(date);
+}
